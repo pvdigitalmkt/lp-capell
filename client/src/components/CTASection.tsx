@@ -1,4 +1,5 @@
 import { useState } from "react";
+import emailjs from "@emailjs/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,42 +7,63 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Send, CheckCircle2 } from "lucide-react";
 
+// EmailJS credentials
+const EMAILJS_PUBLIC_KEY = "wJfN-UcFU52dxGSZA";
+const EMAILJS_SERVICE_ID = "service_7a1ndan";
+const EMAILJS_TEMPLATE_ID = "template_qw2swq6";
+
 export default function CTASection() {
-  const [name, setName] = useState("");
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [company, setCompany] = useState("");
-  const [businessType, setBusinessType] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [empresa, setEmpresa] = useState("");
+  const [tipo_empresa, setTipoEmpresa] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !phone) {
+    if (!nome || !telefone) {
       toast.error("Por favor, preencha seu nome e telefone.");
       return;
     }
 
     setLoading(true);
 
-    try {
-      const response = await fetch("/api/email/send-lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, company, businessType }),
-      });
+    const now = new Date();
+    const data_hora = now.toLocaleString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-      if (response.ok) {
-        setSubmitted(true);
-        toast.success("Mensagem enviada! Em breve entraremos em contato.");
-        setName(""); setEmail(""); setPhone(""); setCompany(""); setBusinessType("");
-      } else {
-        const data = await response.json();
-        toast.error(data.error || "Erro ao enviar. Tente novamente.");
-      }
+    const templateParams = {
+      nome,
+      email: email || "Não informado",
+      telefone,
+      mensagem: empresa ? `Negócio: ${empresa}` : "Não informado",
+      tipo_empresa: tipo_empresa || "Não informado",
+      data_hora,
+    };
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_PUBLIC_KEY
+      );
+
+      setSubmitted(true);
+      toast.success("Mensagem enviada! Em breve entraremos em contato.");
+      setNome(""); setEmail(""); setTelefone(""); setEmpresa(""); setTipoEmpresa("");
     } catch (err) {
-      toast.error("Erro de conexão. Verifique sua internet e tente novamente.");
+      console.error("EmailJS error:", err);
+      toast.error("Erro ao enviar. Tente novamente ou entre em contato pelo WhatsApp.");
     } finally {
       setLoading(false);
     }
@@ -79,15 +101,15 @@ export default function CTASection() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-white font-medium">
+                  <Label htmlFor="nome" className="text-white font-medium">
                     Seu Nome Completo <span className="text-red-400">*</span>
                   </Label>
                   <Input
-                    id="name"
+                    id="nome"
                     type="text"
                     placeholder="Ex: João da Silva"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
+                    value={nome}
+                    onChange={e => setNome(e.target.value)}
                     required
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus:ring-white"
                   />
@@ -108,43 +130,43 @@ export default function CTASection() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-white font-medium">
+                  <Label htmlFor="telefone" className="text-white font-medium">
                     Seu Telefone / WhatsApp <span className="text-red-400">*</span>
                   </Label>
                   <Input
-                    id="phone"
+                    id="telefone"
                     type="tel"
                     placeholder="Ex: (11) 9 9999-9999"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
+                    value={telefone}
+                    onChange={e => setTelefone(e.target.value)}
                     required
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus:ring-white"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company" className="text-white font-medium">
+                  <Label htmlFor="empresa" className="text-white font-medium">
                     Nome do Negócio (opcional)
                   </Label>
                   <Input
-                    id="company"
+                    id="empresa"
                     type="text"
                     placeholder="Ex: Minha Empresa Ltda"
-                    value={company}
-                    onChange={e => setCompany(e.target.value)}
+                    value={empresa}
+                    onChange={e => setEmpresa(e.target.value)}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus:ring-white"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessType" className="text-white font-medium">
+                  <Label htmlFor="tipo_empresa" className="text-white font-medium">
                     Qual é o ramo do seu negócio?
                   </Label>
                   <Textarea
-                    id="businessType"
+                    id="tipo_empresa"
                     placeholder="Ex: Comércio de roupas, Consultoria de TI, Restaurante..."
-                    value={businessType}
-                    onChange={e => setBusinessType(e.target.value)}
+                    value={tipo_empresa}
+                    onChange={e => setTipoEmpresa(e.target.value)}
                     rows={3}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus:ring-white resize-none"
                   />
