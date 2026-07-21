@@ -2,8 +2,22 @@ import { MessageCircle } from "lucide-react";
 
 const WHATSAPP_NUMBER = "5511956591211";
 
+// Extend Window interface to include dataLayer
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[];
+  }
+}
+
 export default function WhatsAppButton() {
   const handleClick = () => {
+    // Push GTM event clique_whatsapp to dataLayer
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "clique_whatsapp",
+      whatsapp_origem: "botao_flutuante",
+    });
+
     const message = "Olá! Gostaria de saber mais sobre abertura de empresa.";
     const whatsappLink = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
     window.open(whatsappLink, "_blank");
